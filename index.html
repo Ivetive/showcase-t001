@@ -1,0 +1,208 @@
+<!DOCTYPE html>
+<html lang="cs">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Tabs – Panel s tabulkou (IC-001)</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+  /* Design tokens (Figma variables, fallbacks from IC-001) */
+  :root {
+    --font-family-body: 'Roboto', system-ui, sans-serif;
+    --font-family-title: 'Roboto', system-ui, sans-serif;
+    --tabs-border-bottom-container: #aeb3ba;
+    --tabs-border-bottom-selected: #000755;
+    --tabs-text-selected: #000755;
+    --tabs-text: #5c636c;
+    --background-default: #ffffff;
+    --background-frame: #d3e0f0;
+    --border-container: #aeb3ba;
+    --border-divider-contrast: #aeb3ba;
+    --border-grid: #eaecef;
+    --text-container: #181b1e;
+    --text-description: #5c636c;
+    --text-control: #2a2e33;
+    --icon-primary: #1665d8;
+    --button-tertiary-icon: #1665d8;
+    --tag-background-warning: #ffb347;
+    --tag-text-warning: #000755;
+    --corner-radius-m: 6px;
+    --corner-radius-xl: 10px;
+    --letter-spacing-xs: 0.1px;
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; padding: 24px; font-family: var(--font-family-body); background: #f6f7f9; }
+
+  .tabs { display: flex; flex-direction: column; align-items: flex-start; max-width: 868px; }
+
+  /* Tab bar */
+  .tab-bar { display: flex; width: 100%; padding-bottom: 16px; }
+  .tab-items { display: flex; flex: 1; border-bottom: 1px solid var(--tabs-border-bottom-container); }
+  .tab-item {
+    all: unset; cursor: pointer;
+    padding: 8px 24px 10px;
+    border-bottom: 2px solid transparent;
+    margin-bottom: -1px;
+    font-size: 13px; line-height: 16px; min-height: 16px;
+    color: var(--tabs-text); font-weight: 400; white-space: nowrap;
+  }
+  .tab-item:hover { color: var(--tabs-text-selected); }
+  .tab-item:focus-visible { outline: 2px solid var(--icon-primary); outline-offset: -2px; border-radius: 2px; }
+  .tab-item[aria-selected="true"] {
+    border-bottom-color: var(--tabs-border-bottom-selected);
+    color: var(--tabs-text-selected); font-weight: 700;
+  }
+
+  /* Panel */
+  .panel {
+    background: var(--background-default);
+    border: 1px solid var(--border-container);
+    border-radius: var(--corner-radius-xl);
+    padding: 20px;
+    display: flex; flex-direction: column; gap: 8px;
+  }
+  .panel-header { display: flex; align-items: center; justify-content: space-between; }
+  .panel-title {
+    margin: 0; flex: 1; padding-right: 8px;
+    font-family: var(--font-family-title); font-weight: 700; font-size: 14px; line-height: 1;
+    letter-spacing: var(--letter-spacing-xs); text-transform: uppercase; color: var(--text-container);
+  }
+  .expand-btn {
+    all: unset; cursor: pointer; width: 34px; display: flex; justify-content: flex-end;
+    color: var(--icon-primary);
+  }
+  .expand-btn svg { width: 26px; height: 26px; transition: transform .15s; }
+  .panel.collapsed .expand-btn svg { transform: rotate(180deg); }
+  .panel.collapsed .panel-slot { display: none; }
+  .expand-btn:focus-visible { outline: 2px solid var(--icon-primary); border-radius: 4px; }
+
+  /* Table */
+  .panel-slot { display: flex; flex-direction: column; gap: 8px; padding-top: 4px; }
+  .table-title {
+    margin: 0; font-family: var(--font-family-title); font-weight: 700; font-size: 14px; line-height: 1;
+    letter-spacing: var(--letter-spacing-xs); color: var(--text-container);
+  }
+  table { width: 826px; border-collapse: separate; border-spacing: 0; table-layout: fixed; }
+  thead th {
+    background: var(--background-frame); height: 41px;
+    border-bottom: 1px solid var(--border-divider-contrast);
+    padding: 0 12px; font-family: var(--font-family-title); font-weight: 500; font-size: 12px;
+    color: var(--text-description); text-align: right; white-space: nowrap;
+  }
+  thead th:first-child { border-top-left-radius: var(--corner-radius-m); text-align: left; }
+  thead th:last-child { border-top-right-radius: var(--corner-radius-m); }
+  tbody td {
+    height: 41px; padding: 0 12px;
+    border-bottom: 1px solid var(--border-grid);
+    font-size: 13px; color: var(--text-control); text-align: right;
+    white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+  }
+  tbody td:first-child { text-align: left; }
+  tbody tr:hover td { background: #f4f7fb; }
+  .col-actions { width: 112px; }
+  td.actions { padding: 0 10px 0 4px; overflow: visible; }
+  .actions-wrap { display: flex; gap: 4px; justify-content: flex-end; }
+  .btn-s {
+    all: unset; cursor: pointer; width: 30px; height: 30px; box-sizing: border-box;
+    display: inline-flex; align-items: center; justify-content: center;
+    border-radius: var(--corner-radius-m); color: var(--button-tertiary-icon);
+  }
+  .btn-s:hover { background: rgba(22,101,216,.08); }
+  .btn-s:focus-visible { outline: 2px solid var(--icon-primary); }
+  .btn-s svg { width: 16px; height: 16px; }
+
+  .tag {
+    display: inline-flex; align-items: center; justify-content: center;
+    min-height: 22px; padding: 3px 7px; border-radius: 4px;
+    background: var(--tag-background-warning); border: 1px solid var(--tag-background-warning);
+    font-weight: 500; font-size: 12px; color: var(--tag-text-warning);
+  }
+  .tab-panel[hidden] { display: none; }
+  .placeholder { color: var(--text-description); font-size: 13px; }
+</style>
+</head>
+<body>
+<div class="tabs">
+  <div class="tab-bar">
+    <div class="tab-items" role="tablist" aria-label="Záložky">
+      <button class="tab-item" role="tab" aria-selected="true" aria-controls="tp1" id="t1">Tab item 1</button>
+      <button class="tab-item" role="tab" aria-selected="false" aria-controls="tp2" id="t2" tabindex="-1">Tab item 2</button>
+      <button class="tab-item" role="tab" aria-selected="false" aria-controls="tp3" id="t3" tabindex="-1">Tab item 3</button>
+      <button class="tab-item" role="tab" aria-selected="false" aria-controls="tp4" id="t4" tabindex="-1">Tab item 4</button>
+    </div>
+  </div>
+
+  <div class="tab-panel" role="tabpanel" id="tp1" aria-labelledby="t1">
+    <section class="panel" id="panel">
+      <div class="panel-header">
+        <h2 class="panel-title">Panel title</h2>
+        <button class="expand-btn" aria-expanded="true" aria-controls="slot" aria-label="Sbalit panel">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 9l7 7 7-7"/></svg>
+        </button>
+      </div>
+      <div class="panel-slot" id="slot">
+        <h3 class="table-title">Tabulka title</h3>
+        <table>
+          <colgroup><col><col><col><col><col><col><col class="col-actions"></colgroup>
+          <thead>
+            <tr><th>Column</th><th>Column</th><th>Column</th><th>Column</th><th>Column</th><th>Column</th><th aria-label="Akce"></th></tr>
+          </thead>
+          <tbody id="rows"></tbody>
+        </table>
+      </div>
+    </section>
+  </div>
+  <div class="tab-panel" role="tabpanel" id="tp2" aria-labelledby="t2" hidden><p class="placeholder">Obsah záložky 2</p></div>
+  <div class="tab-panel" role="tabpanel" id="tp3" aria-labelledby="t3" hidden><p class="placeholder">Obsah záložky 3</p></div>
+  <div class="tab-panel" role="tabpanel" id="tp4" aria-labelledby="t4" hidden><p class="placeholder">Obsah záložky 4</p></div>
+</div>
+
+<script>
+  const icons = {
+    add: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><circle cx="12" cy="12" r="9.5"/><path d="M12 8v8M8 12h8"/></svg>',
+    edit: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"><path d="M16.5 3.5l4 4L8 20H4v-4L16.5 3.5z"/><path d="M14 6l4 4"/></svg>',
+    next: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 5l7 7-7 7"/></svg>'
+  };
+  const rows = Array.from({ length: 5 }, () => ['String', 'Int', 'Int', 'Int', 'Int']);
+  document.getElementById('rows').innerHTML = rows.map(r => `
+    <tr>
+      ${r.map(c => `<td>${c}</td>`).join('')}
+      <td><span class="tag">Warning</span></td>
+      <td class="actions"><div class="actions-wrap">
+        <button class="btn-s" aria-label="Přidat">${icons.add}</button>
+        <button class="btn-s" aria-label="Upravit">${icons.edit}</button>
+        <button class="btn-s" aria-label="Detail">${icons.next}</button>
+      </div></td>
+    </tr>`).join('');
+
+  // Tabs (click + arrow keys)
+  const tabs = [...document.querySelectorAll('[role=tab]')];
+  function select(tab) {
+    tabs.forEach(t => {
+      const on = t === tab;
+      t.setAttribute('aria-selected', on);
+      t.tabIndex = on ? 0 : -1;
+      document.getElementById(t.getAttribute('aria-controls')).hidden = !on;
+    });
+    tab.focus();
+  }
+  tabs.forEach((t, i) => {
+    t.addEventListener('click', () => select(t));
+    t.addEventListener('keydown', e => {
+      if (e.key === 'ArrowRight') select(tabs[(i + 1) % tabs.length]);
+      if (e.key === 'ArrowLeft') select(tabs[(i - 1 + tabs.length) % tabs.length]);
+    });
+  });
+
+  // Collapsible panel
+  const panel = document.getElementById('panel');
+  const btn = panel.querySelector('.expand-btn');
+  btn.addEventListener('click', () => {
+    const collapsed = panel.classList.toggle('collapsed');
+    btn.setAttribute('aria-expanded', !collapsed);
+    btn.setAttribute('aria-label', collapsed ? 'Rozbalit panel' : 'Sbalit panel');
+  });
+</script>
+</body>
+</html>
